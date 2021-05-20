@@ -65,6 +65,11 @@ def session():
             userId = struct.unpack('!b', data[1:2])[0]
             print("Playerul cu userid:" + str(userId) + "s-a facut alb")
             others_colors[userId] = white
+        if packetType == 10:
+            userId = struct.unpack('!b', data[1:2])[0]
+            print(str(userId) + "a iesit din joc")
+            others.pop(userId)
+            others_colors.pop(userId)
 
 print("TEST")
 

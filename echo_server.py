@@ -42,9 +42,14 @@ def session(conn, adr):
 
         except:
             print("error on socket")
-            sockID = sockets_ids[conn]
+            sockID = sockets_ids[conn] 
             sockets.pop(sockID)
             sockets_ids.pop(conn)
+            print("Player quit: " + str(sockID))
+            for s in sockets.values():
+                if s != conn:
+                    #print("SENDING STUFF for sock " + strsockID)
+                    send_status_for_specifficID(s, sockID)
             return
         #print(data)
         #conn.sendall(data) # trimite toti bytes
@@ -70,6 +75,15 @@ def send_color_for_specifficID(sock, ID):
     IDbytes = struct.pack('!b', ID)
     
     sock.sendall(messageType + IDbytes)
+
+def send_status_for_specifficID(sock, ID):
+    messageType = struct.pack('!b',10)
+    IDbytes = struct.pack('!b', ID)
+    
+    try:
+        sock.sendall(messageType + IDbytes)
+    except:
+        print("Error sending on sendStatusForSpecificId!")
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.bind((HOST, PORT))
