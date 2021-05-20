@@ -31,7 +31,10 @@ def send_position_packet(x: float, y: float):
     
     connectionSocket.sendall(messageType + xbytes + ybytes)
 
-
+# pachet pentru a trimite serverului intentia de a transforma culoarea
+def send_color_command():
+    messageType = struct.pack('!b',8)  
+    connectionSocket.sendall(messageType)
 
 killSwitch = False # set this to true to kill thread
 
@@ -50,13 +53,18 @@ def session():
             # packet : 6 + id(byte)
             connectedId = struct.unpack( '!b', data[1:2])[0]
             others[connectedId] = (300,200)
+            others_colors[connectedId] = pygame.Color(0,0,255)
             print ("S-a conectat un jucator cu id " + str(connectedId))
         if packetType == 7:
             # packet : 7 + id(byte) + x(float) + y(float)
             # float = 4bytes
 
-            userId, x, y = struct.unpack('!bff', data[1:10])
+            userId, x, y = struct.unpack('!bff', data[1:10]) # incepe de la 1 inclusiv - 10 exclusiv (bytes)
             others[userId] = (x,y)
+        if packetType == 9:
+            userId = struct.unpack('!b', data[1:2])[0]
+            print("Playerul cu userid:" + str(userId) + "s-a facut alb")
+            others_colors[userId] = white
 
 print("TEST")
 
@@ -64,20 +72,29 @@ sessionThread = threading.Thread(target=session, args=())
 sessionThread.start()
 
 others = {}
+others_colors = {}
+
+white = pygame.Color(255,255,255)
+
+myColor = pygame.Color(255,0,0)
 
 while run_me:
     
     screen.fill(black)
-    pygame.draw.circle(screen, pygame.Color(255,0,0), (posx, posy), 10)
+    pygame.draw.circle(screen, myColor, (posx, posy), 10)
 
-    for o in others.values():
-        pygame.draw.circle(screen, pygame.Color(0,0,255), o, 10)
+    for o in others.keys():
+        pygame.draw.circle(screen, others_colors[o], others[o], 10)
 
     moved = False
-    
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run_me = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                send_color_command()
+                myColor = white
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
                 moved = True
@@ -89,11 +106,11 @@ while run_me:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
                 moved = True
-                posy = posy + 10
+                posy = posy - 10
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_DOWN:
                 moved = True
-                posy = posy - 10
+                posy = posy + 10
         
     if moved:
         send_position_packet(posx,posy)

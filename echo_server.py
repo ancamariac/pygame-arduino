@@ -24,12 +24,22 @@ def session(conn, adr):
         try:
             data = conn.recv(1024) #primeste date in maxim 1024 de bytes
             print(data)
-            packet_id, x, y = struct.unpack('!bff',data)
-            print("ID: " + str(packet_id) + "x: " + str(x) + "y: " + str(y))
 
-            for s in sockets.values():
-                if s != conn:
-                    send_pos_for_ID(s, connectionID, x, y)
+            packetType = struct.unpack( '!b', data[0:1] )[0]
+            if packetType == 5:
+                # packet : 7 + id(byte) + x(float) + y(float)
+                # float = 4bytes
+                packetId, x, y = struct.unpack('!bff', data)
+                for s in sockets.values():
+                    if s != conn:
+                        send_pos_for_ID(s, connectionID, x, y)
+            if packetType == 8:
+                for s in sockets.values():
+                    if s != conn:
+                        send_color_for_specifficID(s, connectionID)
+                
+
+
         except:
             print("error on socket")
             sockID = sockets_ids[conn]
@@ -42,7 +52,7 @@ def session(conn, adr):
 def send_connected_message(sock, connected_id):
     messageType = struct.pack('!b',6)
     ID_part = struct.pack('!b', connected_id)
-    try:
+    try: 
         sock.sendall(messageType + ID_part )
     except:
         return
@@ -54,6 +64,12 @@ def send_pos_for_ID(sock, ID, posx, posy):
     IDbytes = struct.pack('!b', ID)
     
     sock.sendall(messageType + IDbytes + xbytes + ybytes)
+
+def send_color_for_specifficID(sock, ID):
+    messageType = struct.pack('!b',9)
+    IDbytes = struct.pack('!b', ID)
+    
+    sock.sendall(messageType + IDbytes)
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.bind((HOST, PORT))
