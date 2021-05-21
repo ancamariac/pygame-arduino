@@ -17,8 +17,8 @@ posy = 200
 black = (0,0,0)
 
 
-HOST = '127.0.0.1'  # The server's hostname or IP address
-PORT = 3000        # The port used by the server
+HOST = '192.168.1.6'  # The server's hostname or IP address
+PORT = 1000        # The port used by the server
 
 connectionSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
